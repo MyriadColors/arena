@@ -151,6 +151,9 @@ void arena_trim(Arena *a);
 // It should be up to new_region() to decide the actual capacity to allocate
 Region *new_region(size_t capacity)
 {
+    if (capacity > (SIZE_MAX - sizeof(Region)) / sizeof(uintptr_t)) {
+        return NULL;
+    }
     size_t size_bytes = sizeof(Region) + sizeof(uintptr_t)*capacity;
     // TODO: it would be nice if we could guarantee that the regions are allocated by ARENA_BACKEND_LIBC_MALLOC are page aligned
     Region *r = (Region*)malloc(size_bytes);
@@ -171,6 +174,9 @@ void free_region(Region *r)
 
 Region *new_region(size_t capacity)
 {
+    if (capacity > (SIZE_MAX - sizeof(Region)) / sizeof(uintptr_t)) {
+        return NULL;
+    }
     size_t size_bytes = sizeof(Region) + sizeof(uintptr_t) * capacity;
     Region *r = mmap(NULL, size_bytes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
     ARENA_ASSERT(r != MAP_FAILED);
@@ -182,6 +188,9 @@ Region *new_region(size_t capacity)
 
 void free_region(Region *r)
 {
+    if (r->capacity > (SIZE_MAX - sizeof(Region)) / sizeof(uintptr_t)) {
+        return;
+    }
     size_t size_bytes = sizeof(Region) + sizeof(uintptr_t) * r->capacity;
     int ret = munmap(r, size_bytes);
     ARENA_ASSERT(ret == 0);
@@ -200,6 +209,9 @@ void free_region(Region *r)
 
 Region *new_region(size_t capacity)
 {
+    if (capacity > (SIZE_MAX - sizeof(Region)) / sizeof(uintptr_t)) {
+        return NULL;
+    }
     SIZE_T size_bytes = sizeof(Region) + sizeof(uintptr_t) * capacity;
     Region *r = VirtualAllocEx(
         GetCurrentProcess(),      /* Allocate in current process address space */
@@ -248,6 +260,9 @@ unsigned char* bump_pointer = &__heap_base;
 
 Region *new_region(size_t capacity)
 {
+    if (capacity > (SIZE_MAX - sizeof(Region)) / sizeof(uintptr_t)) {
+        return NULL;
+    }
     size_t size_bytes = sizeof(Region) + sizeof(uintptr_t)*capacity;
     Region *r = (void*)bump_pointer;
 
