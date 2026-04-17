@@ -1,3 +1,5 @@
+#pragma once
+
 // Copyright 2022 Alexey Kutepov <reximkut@gmail.com>
 
 // Permission is hereby granted, free of charge, to any person obtaining
@@ -19,9 +21,6 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef ARENA_H_
-#define ARENA_H_
-
 #include <stddef.h>
 #include <stdint.h>
 
@@ -33,6 +32,10 @@
 #ifndef ARENA_ASSERT
 #include <assert.h>
 #define ARENA_ASSERT assert
+#endif
+
+#ifndef ARENA_MIN_ALIGN
+#define ARENA_MIN_ALIGN 8
 #endif
 
 #define ARENA_BACKEND_LIBC_MALLOC 0
@@ -140,10 +143,6 @@ void arena_trim(Arena *a);
 // Append a single NULL character at the end of a string builder. So then you can
 // use it a NULL-terminated C string
 #define arena_sb_append_null(a, sb) arena_da_append(a, sb, 0)
-
-#endif // ARENA_H_
-
-#ifdef ARENA_IMPLEMENTATION
 
 #if ARENA_BACKEND == ARENA_BACKEND_LIBC_MALLOC
 #include <stdlib.h>
@@ -293,7 +292,8 @@ void free_region(Region *r)
 
 void *arena_alloc(Arena *a, size_t size_bytes)
 {
-    size_t size = (size_bytes + sizeof(uintptr_t) - 1)/sizeof(uintptr_t);
+    size_t size_rounded = ((size_bytes + ARENA_MIN_ALIGN - 1) & ~(ARENA_MIN_ALIGN - 1));
+    size_t size = (size_rounded + sizeof(uintptr_t) - 1)/sizeof(uintptr_t);
 
     if (a->end == NULL) {
         ARENA_ASSERT(a->begin == NULL);
@@ -448,4 +448,3 @@ void arena_trim(Arena *a){
     a->end->next = NULL;
 }
 
-#endif // ARENA_IMPLEMENTATION
