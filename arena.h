@@ -140,6 +140,11 @@ void arena_trim(Arena *a);
         arena_da_append_many(a, sb, s, n); \
     } while (0)
 
+// Append N characters to a string builder (safer alternative to appending a
+// NULL-terminated string when you know the size)
+#define arena_sb_append_subsize(a, sb, cstr, size) \
+    arena_da_append_many(a, sb, cstr, size)
+
 // Append a single NULL character at the end of a string builder. So then you can
 // use it a NULL-terminated C string
 #define arena_sb_append_null(a, sb) arena_da_append(a, sb, 0)
